@@ -1,19 +1,14 @@
-use serde::{Deserialize, Serialize};
 // use etymology::open_file;
-use std::borrow::Cow;
-use std::collections::HashMap;
+use std::env;
 use std::error::Error;
-use std::io;
 
-#[derive(Deserialize, Serialize)]
-struct JSON<'a>(HashMap<Cow<'a, str>, HashMap<Cow<'a, str>, Vec<HashMap<Cow<'a, str>, Cow<'a, str>>>>>);
+use etymology::JSON;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let json = std::fs::read_to_string("src/data.json")?;
     let data = serde_json::from_str(&json).expect("problem with json");
-    println!("Please give an english word");
-    let mut word = String::new();
-    io::stdin().read_line(&mut word)?;
+    let args: Vec<String> = env::args().collect();
+    let word = &args[1];
     match look_up_word(word.trim(), "eng", &data) {
         Some(ety) => println!("{}", ety),
         None => println!("No word found"),

@@ -1,5 +1,6 @@
 use epub::doc::EpubDoc;
-use std::fs::File;
+use serde::{Deserialize, Serialize};
+use std::{fs::File, collections::HashMap, borrow::Cow};
 use voca_rs::*;
 
 
@@ -33,3 +34,6 @@ pub fn map_words_to_count(mut doc: EpubDoc<File>) -> std::collections::HashMap<S
 }
 
 // fn map_map_to_etymological_roots() {}
+#[derive(Deserialize, Serialize)]
+pub struct JSON<'a>(pub HashMap<Cow<'a, str>, HashMap<Cow<'a, str>, Vec<HashMap<Cow<'a, str>, Cow<'a, str>>>>>);
+
