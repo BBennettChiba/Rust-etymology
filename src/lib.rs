@@ -1,8 +1,7 @@
 use epub::doc::EpubDoc;
 use serde::{Deserialize, Serialize};
-use std::{fs::File, collections::HashMap, borrow::Cow};
+use std::{borrow::Cow, collections::HashMap, fs::File};
 use voca_rs::*;
-
 
 pub fn open_file(path: &str) -> Vec<(String, i32)> {
     let doc = match EpubDoc::new(path) {
@@ -35,5 +34,40 @@ pub fn map_words_to_count(mut doc: EpubDoc<File>) -> std::collections::HashMap<S
 
 // fn map_map_to_etymological_roots() {}
 #[derive(Deserialize, Serialize)]
-pub struct JSON<'a>(pub HashMap<Cow<'a, str>, HashMap<Cow<'a, str>, Vec<HashMap<Cow<'a, str>, Cow<'a, str>>>>>);
+pub struct JSON<'a>(
+    pub HashMap<Cow<'a, str>, HashMap<Cow<'a, str>, Vec<HashMap<Cow<'a, str>, Cow<'a, str>>>>>,
+);
 
+pub fn look_up_word(word: &str, language: &str, data: &JSON) -> Option<String> {
+    let language = match data.0.get(language) {
+        Some(v) => v,
+        None => return None,
+    };
+    let etymologies = match language.get(word) {
+        Some(v) => v,
+        None => return None,
+    };
+    let mut return_string = String::new();
+    for etymology in etymologies {
+        let etymology = etymology;
+        let (origin, original_language) = etymology.iter().next().unwrap();
+        return_string += &format!(
+            "{}'s origin is {} from {}. \n |-{}",
+            word,
+            origin,
+            match_language(original_language),
+            look_up_word(origin, original_language, data).unwrap_or("".to_string())
+        );
+    }
+    Some(return_string)
+}
+
+fn match_language(lang: &str) -> String {
+    match lang {
+        "eng" => "English".to_owned(),
+        "lat" => "Latin".to_owned(),
+        "enm" => "Middle English".to_owned(),
+        "ang" => "Old English".to_owned(),
+        _ => lang.to_owned(),
+    }
+}
